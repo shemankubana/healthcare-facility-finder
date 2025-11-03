@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Users,
   Building2,
@@ -20,6 +20,10 @@ const DashboardOverview = () => {
   useEffect(() => {
     fetchDashboardData();
   }, []);
+
+  const getAccessibilityData = async () => {}
+
+  const getPredictions = async () => {}
 
   const fetchDashboardData = async () => {
     try {
