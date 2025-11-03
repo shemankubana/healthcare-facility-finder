@@ -18,6 +18,7 @@ import AccessibilityAnalysis from './components/accessibilityAnalysis';
 import AdminDashboard from './components/admin/adminDashboard';
 import SetPasswordPage from './components/loginPage/setupPasswordPage';
 import DashboardLayout from './components/dashboards/dashboardLayout';
+import HealthFacilityPlanner from './pages/HealthFacilityPlanner';
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
         <Route path='/signup' element={<SignUpPage />} />
         <Route path='/login' element={<LoginPage />} />
         <Route path='/set-password' element={<SetPasswordPage />} />
+        <Route path='/planner' element={<HealthFacilityPlanner />} />
         <Route path='/dashboard' element={<DashboardLayout />}>
           <Route index element={<Navigate to='/dashboard/overview' replace />} />
           <Route path='overview' element={<DashboardOverview />} />
