@@ -54,7 +54,7 @@ const LandingPage = () => {
               <img
                 className="h-auto w-full max-w-md drop-shadow-2xl"
                 alt="Healthcare analytics dashboard"
-                src="/dbb20c8e-05b9-4fb0-a713-baf8f866792f-1.png"
+                src="/landing.png"
               />
             </div>
           </div>
