@@ -37,7 +37,7 @@ const DashboardLayout = () => {
     {
       icon: Lightbulb,
       label: "AI Recommendations",
-      path: "/dashboard/recommendations",
+      path: "/dashboard/planner",
     },
     {
       icon: FileText,

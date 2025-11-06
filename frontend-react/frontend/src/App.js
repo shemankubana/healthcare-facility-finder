@@ -29,14 +29,13 @@ function App() {
         <Route path='/signup' element={<SignUpPage />} />
         <Route path='/login' element={<LoginPage />} />
         <Route path='/set-password' element={<SetPasswordPage />} />
-        <Route path='/planner' element={<HealthFacilityPlanner />} />
         <Route path='/dashboard' element={<DashboardLayout />}>
           <Route index element={<Navigate to='/dashboard/overview' replace />} />
           <Route path='overview' element={<DashboardOverview />} />
           <Route path='analysis' element={<AccessibilityAnalysis />} />
           <Route path='map' element={<InteractiveMap />} />
-          <Route path='recommendations' element={<Recommendations />} />
           <Route path='reports' element={<Reports />} />
+          <Route path='planner' element={<HealthFacilityPlanner />} />
         </Route>
         <Route path='/admin/dashboard' element={<AdminDashboard/>} />
 
