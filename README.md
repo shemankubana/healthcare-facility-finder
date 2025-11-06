@@ -109,14 +109,48 @@ project/
 
 ### Core Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/health` | Health check & system status |
-| `GET` | `/api/accessibility` | Accessibility metrics by district |
-| `GET` | `/api/predictions` | ML model predictions summary |
-| `POST` | `/api/analyze-region` | Analyze specific region |
-| `GET` | `/api/recommendations` | AI-generated recommendations |
+| Method | Endpoint | Description | Example |
+|--------|----------|-------------|---------|
+| `GET` | `/api/health` | Health check & system status | `curl http://localhost:5000/api/health` |
+| `GET` | `/api/districts` | Get all districts | `curl http://localhost:5000/api/districts` |
+| `GET` | `/api/districts/:id` | Get specific district by ID | `curl http://localhost:5000/api/districts/{uuid}` |
+| `GET` | `/api/analyze?district=X&targetTravel=Y` | Analyze specific district with target travel time | `curl "http://localhost:5000/api/analyze?district=Kayonza&targetTravel=30"` |
+| `POST` | `/api/recommend` | Generate AI recommendations from analysis | See POST example below |
+| `GET` | `/api/recommend/history/:districtId` | Get recommendation history for district | `curl http://localhost:5000/api/recommend/history/{uuid}` |
 
+### Example POST Request for Recommendations
+
+```bash
+curl -X POST http://localhost:5000/api/recommend \
+  -H "Content-Type: application/json" \
+  -d '{
+    "analysis": {
+      "district": "Kayonza",
+      "districtId": "uuid-from-districts-endpoint",
+      "population": 400000,
+      "currentFacilities": 5,
+      "avgTravel": 40,
+      "target": 30,
+      "gap_status": "UNDERSERVED"
+    }
+  }'
+```
+
+### Testing the API
+
+```bash
+# 1. Check if backend is healthy
+curl http://localhost:5000/api/health
+
+# 2. Get all available districts
+curl http://localhost:5000/api/districts
+
+# 3. Analyze Kayonza district with 30-minute target travel time
+curl "http://localhost:5000/api/analyze?district=Kayonza&targetTravel=30"
+
+# 4. Analyze Rwamagana district
+curl "http://localhost:5000/api/analyze?district=Rwamagana&targetTravel=25"
+```
 
 ## Data
 
