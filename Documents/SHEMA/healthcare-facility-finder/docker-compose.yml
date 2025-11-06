@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - OLLAMA_URL=http://ollama:11434
+      - OLLAMA_MODEL=mistral
+      - NODE_ENV=production
+    depends_on:
+      - ollama
+    networks:
+      - health-network
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    environment:
+      - OLLAMA_MODELS=/root/.ollama/models
+    networks:
+      - health-network
+    command: serve
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./frontend-react/frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:5000
+    depends_on:
+      - api
+    networks:
+      - health-network
+    restart: unless-stopped
+
+volumes:
+  ollama-data:
+
+networks:
+  health-network:
+    driver: bridge
