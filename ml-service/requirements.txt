@@ -1,0 +1,22 @@
+# Core API framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+
+# ML and data processing
+numpy==1.24.3
+scikit-learn==1.3.0
+pandas==2.0.3
+
+# Google Earth Engine (optional but recommended)
+earthengine-api==0.1.380
+google-auth==2.23.4
+google-auth-oauthlib==1.1.0
+
+# Utilities
+python-dotenv==1.0.0
+python-multipart==0.0.6
+
+# Development
+pytest==7.4.3
+httpx==0.25.1
