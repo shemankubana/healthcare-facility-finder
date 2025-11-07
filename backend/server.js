@@ -5,6 +5,7 @@ import analyzeRouter from "./routes/analyze.js";
 import recommendRouter from "./routes/recommend.js";
 import districtsRouter from "./routes/districts.js";
 import usersRouter from "./routes/users.js";
+import mlRouter from "./routes/ml.js";
 
 dotenv.config();
 
@@ -20,6 +21,7 @@ app.use("/api/districts", districtsRouter);
 app.use("/api/analyze", analyzeRouter);
 app.use("/api/recommend", recommendRouter);
 app.use("/api/users", usersRouter);
+app.use("/api/ml", mlRouter);
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });

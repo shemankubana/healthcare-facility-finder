@@ -6,18 +6,47 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     ports:
-      - "5000:5000"
+      - "8080:8080"
     environment:
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
       - OLLAMA_URL=http://ollama:11434
       - OLLAMA_MODEL=mistral
+      - ML_ENABLED=${ML_ENABLED:-false}
+      - ML_SERVICE_URL=http://ml-service:5001
+      - PORT=8080
       - NODE_ENV=production
     depends_on:
       - ollama
+      - ml-service
     networks:
       - health-network
     restart: unless-stopped
+
+  ml-service:
+    build:
+      context: ./ml-service
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./ml-service/models:/app/models:ro
+      - ./ml-service/credentials:/app/credentials:ro
+    environment:
+      - MODEL_PATH=/app/models/healthcare_model.pkl
+      - ML_SERVICE_PORT=5001
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/gee-credentials.json
+    networks:
+      - health-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:5001/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   ollama:
     image: ollama/ollama:latest
@@ -39,7 +68,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - REACT_APP_API_URL=http://localhost:5000
+      - REACT_APP_API_URL=http://localhost:8080
     depends_on:
       - api
     networks:
