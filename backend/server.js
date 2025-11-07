@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import analyzeRouter from "./routes/analyze.js";
 import recommendRouter from "./routes/recommend.js";
 import districtsRouter from "./routes/districts.js";
+import usersRouter from "./routes/users.js";
 
 dotenv.config();
 
@@ -18,6 +19,7 @@ app.use(express.json());
 app.use("/api/districts", districtsRouter);
 app.use("/api/analyze", analyzeRouter);
 app.use("/api/recommend", recommendRouter);
+app.use("/api/users", usersRouter);
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });

@@ -113,22 +113,28 @@ const AdminDashboard = () => {
   const handleApprove = async (request) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (!session) {
         throw new Error('No active session');
       }
 
-      const { data, error } = await supabase.functions.invoke('approve-user', {
-        body: { requestId: request.id },
+      // Call the backend API endpoint instead of edge function
+      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+      const response = await fetch(`${apiUrl}/api/users/approve`, {
+        method: 'POST',
         headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          requestId: request.id,
+          adminToken: session.access_token
+        })
       });
 
-      if (error) throw error;
+      const data = await response.json();
 
-      if (data.error) {
-        throw new Error(data.error);
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to approve user');
       }
 
       showModal(
@@ -136,9 +142,9 @@ const AdminDashboard = () => {
         'User approved successfully! An email has been sent to reset their password.',
         'success'
       );
-      
+
       setTimeout(() => {
-        setRequests(prev => prev.map(r => 
+        setRequests(prev => prev.map(r =>
           r.id === request.id ? { ...r, status: 'approved' } : r
         ));
       }, 1000);
@@ -151,24 +157,39 @@ const AdminDashboard = () => {
 
   const handleReject = async (requestId) => {
     try {
-      const { error } = await supabase
-        .from('signup_requests')
-        .update({ 
-          status: 'rejected',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', requestId);
+      const { data: { session } } = await supabase.auth.getSession();
 
-      if (error) throw error;
+      if (!session) {
+        throw new Error('No active session');
+      }
+
+      // Call the backend API endpoint for consistency
+      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+      const response = await fetch(`${apiUrl}/api/users/reject`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          requestId: requestId,
+          adminToken: session.access_token
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to reject user');
+      }
 
       showModal(
         'Request Declined',
         'User request has been declined.',
         'error'
       );
-      
+
       setTimeout(() => {
-        setRequests(prev => prev.map(r => 
+        setRequests(prev => prev.map(r =>
           r.id === requestId ? { ...r, status: 'rejected' } : r
         ));
       }, 1000);

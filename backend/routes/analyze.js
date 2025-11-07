@@ -9,11 +9,30 @@ router.get("/", async (req, res) => {
 
     const { data: districtData, error: districtError } = await supabase
       .from("districts")
-      .select("id, name, population, area_km2")
+      .select("id, name, population, area_km2, geom")
       .eq("name", district)
       .single();
 
     if (districtError) throw districtError;
+
+    // Calculate actual district bounds from geometry using PostGIS
+    const { data: boundsData, error: boundsError } = await supabase.rpc('get_district_bounds', {
+      district_id: districtData.id
+    });
+
+    let bounds;
+    if (boundsError || !boundsData) {
+      console.warn('Could not fetch district bounds, using defaults:', boundsError);
+      // Fallback to Rwanda general bounds if query fails
+      bounds = {
+        minLat: -2.8,
+        maxLat: -1.0,
+        minLon: 28.8,
+        maxLon: 30.9,
+      };
+    } else {
+      bounds = boundsData;
+    }
 
     const { data: facilities, error: facilitiesError } = await supabase
       .from("health_facilities")
@@ -54,12 +73,7 @@ router.get("/", async (req, res) => {
       target: parseInt(targetTravel) || 30,
       populationPerFacility: Math.round(totalPopulation / facilities.length),
       gap_status: avgTravelTime > parseInt(targetTravel) ? "UNDERSERVED" : "ADEQUATE",
-      bounds: {
-        minLat: -2.2,
-        maxLat: -1.6,
-        minLon: 29.8,
-        maxLon: 30.5,
-      },
+      bounds,
     };
 
     res.json(analysis);
