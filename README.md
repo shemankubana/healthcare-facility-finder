@@ -1,5 +1,6 @@
 # Healthcare Facility Planning Capstone Project
 
+
 ## Overview
 
 This project aims to create an ML-driven web application to guide policymakers in healthcare facility planning placement. The initial implementation (demo) uses Google Earth Engine (GEE) and Python to process Sentinel-2 satellite imagery and ESA WorldCover data for Rwanda, focusing on land cover analysis and built-up area classification. It includes data preprocessing, visualization, and machine learning to identify built-up regions. The system leverages:
