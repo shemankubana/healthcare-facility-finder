@@ -1,0 +1,56 @@
+
+# ============================================================================
+# MODEL EXPORT CELL - Add this to your notebook after training
+# ============================================================================
+
+import pickle
+from pathlib import Path
+from datetime import datetime
+
+# Package model and scaler
+model_data = {
+    'model': rf,  # or 'model' depending on your variable name
+    'scaler': scaler,
+    'version': '1.0.0',
+    'accuracy': accuracy_score(y_test, y_pred),  # Use your actual accuracy
+    'trained_on': datetime.now().strftime('%Y-%m-%d'),
+    'model_type': 'RandomForestClassifier',
+    'n_estimators': rf.n_estimators,
+    'max_depth': rf.max_depth,
+    'feature_names': [
+        'R_mean', 'R_std',
+        'G_mean', 'G_std',
+        'B_mean', 'B_std',
+        'NDVI_mean', 'NDVI_std',
+        'Built_mean', 'Built_std',
+        'Brightness_mean', 'Brightness_std'
+    ]
+}
+
+# Create output directory
+output_path = Path('../ml-service/models')  # Adjust path if needed
+output_path.mkdir(parents=True, exist_ok=True)
+
+# Save model
+model_file = output_path / 'healthcare_model.pkl'
+with open(model_file, 'wb') as f:
+    pickle.dump(model_data, f)
+
+# Confirmation
+file_size = model_file.stat().st_size / (1024 * 1024)
+print("=" * 70)
+print("✅ MODEL EXPORTED SUCCESSFULLY")
+print("=" * 70)
+print(f"Location: {model_file}")
+print(f"Size: {file_size:.2f} MB")
+print(f"Accuracy: {model_data['accuracy']:.4f}")
+print(f"Estimators: {model_data['n_estimators']}")
+print(f"Max depth: {model_data['max_depth']}")
+print("=" * 70)
+
+# Verify export by loading
+with open(model_file, 'rb') as f:
+    loaded = pickle.load(f)
+    print("✅ Verification: Model loads successfully")
+    print(f"   Model type: {loaded['model'].__class__.__name__}")
+    print(f"   Features: {len(loaded['feature_names'])}")
