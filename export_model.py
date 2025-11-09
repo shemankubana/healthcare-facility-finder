@@ -106,85 +106,7 @@ def extract_model_from_notebook():
     return None
 
 
-def create_dummy_model():
-    """
-    Create a dummy model for testing purposes.
-    This allows the ML service to start and be tested without a fully trained model.
-    """
-    from sklearn.ensemble import RandomForestClassifier
-    from sklearn.preprocessing import StandardScaler
-
-    print("=" * 80)
-    print("CREATING DUMMY MODEL FOR TESTING")
-    print("=" * 80)
-    print()
-    print("⚠️  WARNING: This creates a DUMMY model that is NOT trained on real data!")
-    print("   This is ONLY for testing the ML service integration.")
-    print("   For production, you MUST export the real trained model from your notebook.")
-    print()
-
-    response = input("Create dummy model? (yes/no): ").strip().lower()
-    if response != "yes":
-        print("Cancelled.")
-        return None
-
-    print("\n🔧 Creating dummy model...")
-
-    # Create dummy training data
-    np.random.seed(42)
-    X_dummy = np.random.rand(100, 12)  # 100 samples, 12 features
-    y_dummy = np.random.randint(0, 2, 100)  # Binary classification
-
-    # Train a basic model
-    model = RandomForestClassifier(
-        n_estimators=10,
-        max_depth=5,
-        random_state=42
-    )
-    model.fit(X_dummy, y_dummy)
-
-    # Create scaler
-    scaler = StandardScaler()
-    scaler.fit(X_dummy)
-
-    # Package model
-    model_data = {
-        'model': model,
-        'scaler': scaler,
-        'version': '0.0.1-dummy',
-        'accuracy': 0.5,  # Random performance
-        'trained_on': 'DUMMY MODEL - NOT TRAINED',
-        'model_type': 'RandomForestClassifier',
-        'n_estimators': 10,
-        'max_depth': 5,
-        'feature_names': [
-            'R_mean', 'R_std', 'G_mean', 'G_std', 'B_mean', 'B_std',
-            'NDVI_mean', 'NDVI_std', 'Built_mean', 'Built_std',
-            'Brightness_mean', 'Brightness_std'
-        ],
-        'training_samples': 100,
-        'test_samples': 0,
-        'classes': ['Non-built', 'Built-up']
-    }
-
-    # Save model
-    output_path = Path("ml-service/models")
-    output_path.mkdir(parents=True, exist_ok=True)
-
-    model_file = output_path / "healthcare_model.pkl"
-    with open(model_file, 'wb') as f:
-        pickle.dump(model_data, f)
-
-    file_size_kb = model_file.stat().st_size / 1024
-
-    print(f"\n✅ DUMMY MODEL CREATED!")
-    print(f"📁 Location: {model_file.absolute()}")
-    print(f"📊 File size: {file_size_kb:.2f} KB")
-    print()
-    print("⚠️  REMEMBER: Replace this with your real trained model!")
-    print()
-
-    return model_file
+# Dummy model creation removed - use train_model.py instead
 
 
 def main():
@@ -199,26 +121,20 @@ def main():
         return 0
 
     print("\n" + "=" * 80)
-    print("NO MODEL FOUND - CHOOSE AN OPTION")
+    print("NO MODEL FOUND")
     print("=" * 80)
     print()
-    print("1. Run the export cell in your Jupyter notebook (RECOMMENDED)")
-    print("2. Create a dummy model for testing (NOT for production)")
-    print("3. Exit")
+    print("To train a model, use one of these methods:")
     print()
-
-    choice = input("Enter choice (1-3): ").strip()
-
-    if choice == "1":
-        print("\n📝 Please open your notebook and run the export cell shown above.")
-        print("   Then run this script again.")
-        return 0
-    elif choice == "2":
-        model_path = create_dummy_model()
-        return 0 if model_path else 1
-    else:
-        print("\nExiting.")
-        return 0
+    print("1. Run the training script (RECOMMENDED):")
+    print("   python train_model.py")
+    print()
+    print("2. Run the export cell in your Jupyter notebook:")
+    print("   Open the notebook and run the model export cell shown above")
+    print()
+    print("❌ No dummy/fallback models available - you must train a real model.")
+    print()
+    return 1
 
 
 if __name__ == "__main__":
