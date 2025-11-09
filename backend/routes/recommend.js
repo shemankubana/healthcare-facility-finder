@@ -1,8 +1,13 @@
 import express from "express";
 import { supabase } from "../lib/supabase.js";
 import { getRecommendation } from "../services/llm.js";
+import { getMLRecommendation } from "../services/mlRecommendation.js";
 
 const router = express.Router();
+
+// Check if ML is enabled
+const ML_ENABLED = process.env.ML_ENABLED === "true";
+const USE_ML_FOR_RECOMMENDATIONS = process.env.USE_ML_FOR_RECOMMENDATIONS !== "false"; // Default to true if ML is enabled
 
 router.post("/", async (req, res) => {
   try {
@@ -12,13 +17,50 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ error: "Analysis data required" });
     }
 
-    const llmResponse = await getRecommendation(analysis);
+    let recommendationResponse;
+    let recommendationMethod = "llm";
 
+    // Try ML-based recommendations first if enabled
+    if (ML_ENABLED && USE_ML_FOR_RECOMMENDATIONS) {
+      try {
+        console.log("Using ML-based recommendations...");
+        recommendationResponse = await getMLRecommendation(analysis);
+        recommendationMethod = "ml";
+        console.log("✓ ML recommendations generated successfully");
+      } catch (mlError) {
+        console.error("ML recommendation failed:", mlError.message);
+        console.log("Falling back to LLM recommendations...");
+
+        // Fall back to LLM if ML fails
+        try {
+          recommendationResponse = await getRecommendation(analysis);
+          recommendationMethod = "llm-fallback";
+        } catch (llmError) {
+          // Both failed - return error
+          return res.status(503).json({
+            error: "Failed to generate recommendations",
+            details: {
+              ml_error: mlError.message,
+              llm_error: llmError.message,
+            },
+            message: "Both ML and LLM recommendation services failed. Please ensure services are running.",
+          });
+        }
+      }
+    } else {
+      // ML disabled or not preferred - use LLM only
+      console.log("Using LLM-based recommendations...");
+      recommendationResponse = await getRecommendation(analysis);
+      recommendationMethod = "llm";
+    }
+
+    // Store recommendation in database
     const { error: storageError } = await supabase.from("recommendations").insert({
       district_id: analysis.districtId,
       target_travel_min: analysis.target,
       analysis_input: analysis,
-      recommendation_output: llmResponse,
+      recommendation_output: recommendationResponse,
+      recommendation_method: recommendationMethod,
     });
 
     if (storageError) {
@@ -28,7 +70,8 @@ router.post("/", async (req, res) => {
     res.json({
       success: true,
       analysis,
-      recommendation: llmResponse,
+      recommendation: recommendationResponse,
+      method: recommendationMethod,
     });
   } catch (error) {
     console.error("Error generating recommendation:", error);
