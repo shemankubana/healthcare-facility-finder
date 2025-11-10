@@ -264,7 +264,7 @@ docker build -t healthcare-ml-service .
 docker run -d \
   -p 5001:5001 \
   -v $(pwd)/models:/app/models \
-  -e MODEL_PATH=/app/models/healthcare_model.pkl \
+  -e MODEL_PATH=models/healthcare_model.pkl \
   --name ml-service \
   healthcare-ml-service
 ```

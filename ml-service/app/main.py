@@ -105,7 +105,7 @@ async def startup_event():
 
     try:
         # Initialize model loader
-        model_path = os.getenv("MODEL_PATH", "/app/models/healthcare_model.pkl")
+        model_path = os.getenv("MODEL_PATH", "./models/healthcare_model.pkl")
         model_loader = ModelLoader(model_path)
         model_loader.load_model()
         logger.info("✅ Model loaded successfully")

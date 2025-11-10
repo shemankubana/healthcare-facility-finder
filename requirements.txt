@@ -25,4 +25,4 @@ geopandas
 scikit-image 
 imblearn 
 geopy
-gdal
+python-dotenv

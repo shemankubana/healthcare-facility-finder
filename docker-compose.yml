@@ -34,7 +34,7 @@ services:
       - ./ml-service/models:/app/models:ro
       - ./ml-service/credentials:/app/credentials:ro
     environment:
-      - MODEL_PATH=/app/models/healthcare_model.pkl
+      - MODEL_PATH=ml-service/models/healthcare_model.pkl
       - ML_SERVICE_PORT=5001
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/gee-credentials.json
