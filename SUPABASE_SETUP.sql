@@ -62,7 +62,9 @@ CREATE POLICY "Anonymous users can create recommendations"
   WITH CHECK (true);
 
 -- Keep the authenticated policy as well
-CREATE POLICY IF NOT EXISTS "Authenticated users can create recommendations"
+DROP POLICY IF EXISTS "Authenticated users can create recommendations" ON recommendations;
+
+CREATE POLICY "Authenticated users can create recommendations"
   ON recommendations FOR INSERT
   TO authenticated
   WITH CHECK (user_id = auth.uid());
