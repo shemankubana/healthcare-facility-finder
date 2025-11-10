@@ -39,3 +39,9 @@ build/
 ml-service/models/*.pkl
 ml-service/models/*.joblib
 ml-service/credentials/*.json
+
+# Large data files (should be excluded)
+*.tif
+*.tiff
+outputs/
+figures/
