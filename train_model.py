@@ -127,15 +127,22 @@ class ModelTrainer:
 
         return np.array(features)
 
-    def prepare_training_data(self, sentinel, labels, patch_size=256):
+    def prepare_training_data(self, sentinel, labels, patch_size=256, stride=128):
         """
         Convert satellite imagery to training data (features and labels)
-        """
-        print(f"\nPreparing training data (patch size: {patch_size}x{patch_size})...")
 
-        # Convert sentinel to HWC format
+        Args:
+            sentinel: Satellite imagery array
+            labels: Label data array
+            patch_size: Size of each patch (default: 256)
+            stride: Step size between patches (default: 128 for 50% overlap)
+        """
+        print(f"\nPreparing training data (patch size: {patch_size}x{patch_size}, stride: {stride})...")
+
+        # Convert sentinel to HWC format - USE ALL 4 BANDS (R, G, B, NIR)
         if sentinel.shape[0] < sentinel.shape[-1]:  # CHW format
-            sentinel = np.moveaxis(sentinel[:3], 0, -1)  # Use first 3 bands (RGB)
+            # Use first 4 bands: RGB + NIR (Sentinel-2 bands 4,3,2,8)
+            sentinel = np.moveaxis(sentinel[:4], 0, -1)
 
         # Resize labels to match sentinel dimensions if needed
         if labels.shape[1:] != sentinel.shape[:2]:
@@ -150,23 +157,28 @@ class ModelTrainer:
         else:
             labels_resized = labels[0] if len(labels.shape) == 3 else labels
 
-        # Calculate patches
+        # Calculate number of patches with stride (overlapping)
         height, width = sentinel.shape[0], sentinel.shape[1]
-        num_patches_height = height // patch_size
-        num_patches_width = width // patch_size
+        num_patches_height = (height - patch_size) // stride + 1
+        num_patches_width = (width - patch_size) // stride + 1
 
-        print(f"Processing {num_patches_height * num_patches_width} patches...")
+        total_patches = num_patches_height * num_patches_width
+        print(f"Processing {total_patches} overlapping patches...")
 
         X = []
         y = []
 
         for i in range(num_patches_height):
             for j in range(num_patches_width):
-                # Extract patch
-                row_start = i * patch_size
+                # Extract patch using stride
+                row_start = i * stride
                 row_end = row_start + patch_size
-                col_start = j * patch_size
+                col_start = j * stride
                 col_end = col_start + patch_size
+
+                # Ensure we don't go out of bounds
+                if row_end > height or col_end > width:
+                    continue
 
                 patch = sentinel[row_start:row_end, col_start:col_end, :]
 
@@ -176,9 +188,9 @@ class ModelTrainer:
 
                 # Get label for patch (class 50 = built-up in WorldCover)
                 patch_label = labels_resized[row_start:row_end, col_start:col_end]
-                # If more than 30% of patch is built-up, mark as 1
+                # If more than 20% of patch is built-up, mark as 1 (lowered threshold)
                 built_up_pixels = np.sum(patch_label == 50)
-                if built_up_pixels > (patch_size * patch_size * 0.3):
+                if built_up_pixels > (patch_size * patch_size * 0.2):
                     y.append(1)  # Built-up / Healthcare facility
                 else:
                     y.append(0)  # Not built-up
@@ -199,9 +211,30 @@ class ModelTrainer:
         print("TRAINING RANDOM FOREST MODEL")
         print("="*70)
 
+        # Validate we have enough samples
+        min_samples = 50
+        if len(X) < min_samples:
+            raise ValueError(
+                f"Insufficient training data: {len(X)} samples found, need at least {min_samples}.\n"
+                f"Try reducing patch_size or stride in prepare_training_data()."
+            )
+
+        # Check class balance
+        unique, counts = np.unique(y, return_counts=True)
+        print(f"\nClass distribution:")
+        for cls, count in zip(unique, counts):
+            print(f"  Class {cls}: {count} samples ({count/len(y)*100:.1f}%)")
+
+        # Ensure both classes have at least 2 samples for stratified split
+        if len(unique) < 2 or min(counts) < 2:
+            print("\nWARNING: Insufficient samples for stratified split. Using random split.")
+            stratify_param = None
+        else:
+            stratify_param = y
+
         # Split data
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
-            X, y, test_size=test_size, random_state=42, stratify=y
+            X, y, test_size=test_size, random_state=42, stratify=stratify_param
         )
 
         print(f"\nTraining samples: {len(self.X_train)}")
@@ -388,9 +421,9 @@ def main():
         print(f"\nERROR loading data: {e}")
         return 1
 
-    # Prepare training data
+    # Prepare training data with smaller stride for more samples
     try:
-        X, y = trainer.prepare_training_data(sentinel, labels)
+        X, y = trainer.prepare_training_data(sentinel, labels, patch_size=128, stride=64)
     except Exception as e:
         print(f"\nERROR preparing training data: {e}")
         return 1
