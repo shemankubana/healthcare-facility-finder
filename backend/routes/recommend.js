@@ -17,6 +17,15 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ error: "Analysis data required" });
     }
 
+    // Validate district_id is a valid UUID
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!analysis.districtId || !uuidRegex.test(analysis.districtId)) {
+      return res.status(400).json({
+        error: "Invalid district ID",
+        message: "The district ID must be a valid UUID. Please use the analyze endpoint first to get a valid district ID."
+      });
+    }
+
     let recommendationResponse;
     let recommendationMethod = "llm";
 
